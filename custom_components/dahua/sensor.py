@@ -31,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
         DahuaFirmwareVersionSensor(coordinator, entry),
         DahuaSerialNumberSensor(coordinator, entry),
         DahuaLicensePlateSensor(coordinator, entry),
+        DahuaHelloWorldSensor(coordinator, entry),
     ]
 
     # The profile is only ever read for devices that answered the Lighting
@@ -154,3 +155,15 @@ class DahuaLicensePlateSensor(DahuaBaseEntity, SensorEntity):
     @property
     def should_poll(self) -> bool:
         return False
+
+
+class DahuaHelloWorldSensor(DahuaBaseEntity, SensorEntity):
+    """Test for Derek to prove it works."""
+
+    @property
+    def name(self):
+        return "Hello World"
+
+    @property
+    def native_value(self):
+        return "Hello_World"
