@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySen
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from custom_components.dahua import DahuaDataUpdateCoordinator
+from datetime import datetime  # For date/time math for DMSS Schedules (not to get system time)
 
 from .const import (
     MOTION_SENSOR_DEVICE_CLASS,
@@ -256,6 +257,16 @@ class DahuaDMSSIsCurrentlyArmedBinarySensor(DahuaBaseEntity, BinarySensorEntity)
         return "DMSS Is Currently Armed"
 
     @property
+    def icon(self):
+        if self.is_on is True:
+            return "mdi:shield-lock"
+
+        if self.is_on is False:
+            return "mdi:shield-off"
+
+        return "mdi:shield-alert"
+
+    @property
     def is_on(self):
         disable_linkage = self.coordinator.data.get(
             "table.DisableLinkage.Enable"
@@ -270,14 +281,80 @@ class DahuaDMSSIsCurrentlyArmedBinarySensor(DahuaBaseEntity, BinarySensorEntity)
         disable_linkage = str(disable_linkage).lower() == "true"
         disable_by_period = str(disable_by_period).lower() == "true"
 
-        # Manual Disarm always wins.
+        # Manually disarmed.
         if disable_linkage:
             return False
 
-        # Following a schedule -- we will calculate this next.
-        if disable_by_period:
+        # Normal armed mode.
+        if not disable_by_period:
+            return True
+
+        # From here on, DMSS is in DisarmByPeriod mode.
+        nvr_time_string = self.coordinator.data.get("nvr_current_time")
+
+        if not nvr_time_string:
             return None
 
-        # Neither disarm mode is active.
+        try:
+            nvr_time = datetime.strptime(
+                str(nvr_time_string),
+                "%Y-%m-%d %H:%M:%S"
+            )
+        except ValueError:
+            return None
+
+        # Dahua:
+        #   0 = Sunday
+        #   1 = Monday
+        #   ...
+        #   6 = Saturday
+        #
+        # Python:
+        #   0 = Monday
+        #   ...
+        #   6 = Sunday
+        dahua_day = (nvr_time.weekday() + 1) % 7
+
+        current_time = nvr_time.time()
+
+        # Dahua provides up to 6 periods for each day.
+        for period_index in range(6):
+            key = (
+                f"table.DisableLinkageTimeSection."
+                f"TimeSection[{dahua_day}][{period_index}]"
+            )
+
+            period = self.coordinator.data.get(key)
+
+            if not period:
+                continue
+
+            try:
+                enabled, time_range = str(period).split(" ", 1)
+
+                if enabled != "1":
+                    continue
+
+                start_string, end_string = time_range.split("-", 1)
+
+                start_time = datetime.strptime(
+                    start_string,
+                    "%H:%M:%S"
+                ).time()
+
+                end_time = datetime.strptime(
+                    end_string,
+                    "%H:%M:%S"
+                ).time()
+
+            except ValueError:
+                continue
+
+            if start_time <= current_time <= end_time:
+                # We are currently inside a scheduled DISARM period.
+                return False
+
+        # DisarmByPeriod is selected, but we're currently outside
+        # all scheduled disarm periods, so the system is armed.
         return True
 

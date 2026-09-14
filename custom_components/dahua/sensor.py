@@ -170,6 +170,22 @@ class DahuaDMSSArmedStateSensor(DahuaBaseEntity, SensorEntity):
         return "DMSS Armed State"
 
     @property
+    def icon(self):
+        state = self.native_value
+
+        if state == "Armed":
+            return "mdi:shield-lock"
+
+        if state == "Disarmed":
+            return "mdi:shield-off"
+
+        if state == "DisarmByPeriod":
+            return "mdi:shield-clock"
+
+        return "mdi:shield-alert"
+
+
+    @property
     def native_value(self):
         disable_linkage = self.coordinator.data.get(
             "table.DisableLinkage.Enable"
