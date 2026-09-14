@@ -710,7 +710,8 @@ class DahuaHostEventStream:
 
             # A channel nobody has configured stays silent, exactly as it did
             # when every coordinator discarded it.
-            for coordinator in self._by_channel.get(index, ()):
+            #for coordinator in self._by_channel.get(index, ()):
+            for coordinator in self._by_channel.get(0, ()):  # <-- Derek Bug fix.  Force index to use 0 (only 1 coordinator) instead of the 4 cameras
                 coordinator.handle_event(dict(event))
 
 
