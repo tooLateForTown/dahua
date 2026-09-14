@@ -180,7 +180,7 @@ class DahuaDMSSArmedStateSensor(DahuaBaseEntity, SensorEntity):
             return "mdi:shield-off"
 
         if state == "DisarmByPeriod":
-            return "mdi:shield-clock"
+            return "mdi:home-clock"
 
         return "mdi:shield-alert"
 
