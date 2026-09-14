@@ -49,6 +49,7 @@ from .const import (
     CONF_NVR_ACTIVE_DETERRENCE,
     CONF_AUTHORIZED_PLATES,
     CONF_AUTHORIZED_HOLD_TIME,
+    CONF_READ_DMSS_ARMING_STATES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_AUTHORIZED_HOLD_TIME,
     MIN_SCAN_INTERVAL,
@@ -813,6 +814,9 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
         self._last_plate_timestamp: int = 0
         self._plate_listeners: list = []
 
+        # Enable DMSS Arm State Reading?
+        self._read_dmss_arming_states = entry.options.get(CONF_READ_DMSS_ARMING_STATES, False)
+
         super().__init__(
             hass,
             _LOGGER,
@@ -1109,11 +1113,32 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
             # the switch, so it survives either one being enabled.
             coros = []
 
-            # Get system time from NVR
-            async def _nvr_current_time():  # Helper function to get nvr_time
-                nvr_time = await self.client.async_get_current_nvr_time()
-                return {"nvr_current_time": nvr_time.get("result")}
-            coros.append(asyncio.ensure_future(_nvr_current_time()))  # Used for Disarm by Period calculations
+            # # Get system time from NVR
+            # async def _nvr_current_time():  # Helper function to get nvr_time
+            #     nvr_time = await self.client.async_get_current_nvr_time()
+            #     return {"nvr_current_time": nvr_time.get("result")}
+            # coros.append(asyncio.ensure_future(_nvr_current_time()))  # Used for Disarm by Period calculations
+
+            # DMSS Armed State Options
+            if self._read_dmss_arming_states:
+                # Get system time from NVR.
+                # We will need this later for DMSS Is Currently Armed.
+                async def _nvr_current_time():
+                    nvr_time = await self.client.async_get_current_nvr_time()
+                    return {"nvr_current_time": nvr_time.get("result")}
+                coros.append(asyncio.ensure_future(_nvr_current_time()))
+                # Read the two flags that determine the DMSS arming mode.
+                coros.append(
+                    asyncio.ensure_future(
+                        self.client.async_get_disarming_linkage()
+                    )
+                )
+
+                coros.append(
+                    asyncio.ensure_future(
+                        self.client.async_get_disarming_linkage_time_section()
+                    )
+                )
 
             if self._wanted_by(CAMERA, SWITCH):
                 coros.append(asyncio.ensure_future(self.client.async_get_config_motion_detection()))
@@ -1124,8 +1149,17 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
             if self.supports_infrared_light() and self._wanted_by(LIGHT):
                 coros.append(
                     asyncio.ensure_future(self.client.async_get_config_lighting(self._channel, self._profile_mode)))
-            if self._supports_disarming_linkage and self._wanted_by(SWITCH):
-                coros.append(asyncio.ensure_future(self.client.async_get_disarming_linkage()))
+            if (
+                    self._supports_disarming_linkage
+                    and self._wanted_by(SWITCH)
+                    and not self._read_dmss_arming_states
+            ):
+                coros.append(
+                    asyncio.ensure_future(
+                        self.client.async_get_disarming_linkage()
+                    )
+
+                )
             if self._supports_event_notifications and self._wanted_by(SWITCH):
                 coros.append(asyncio.ensure_future(self.client.async_get_event_notifications()))
             # The siren switch and the security light both read this one.

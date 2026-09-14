@@ -160,7 +160,7 @@ class DahuaLicensePlateSensor(DahuaBaseEntity, SensorEntity):
 
 class DahuaDMSSArmedStateSensor(DahuaBaseEntity, SensorEntity):
     """Reads the state of the DMSS arming.
-    Returns three possible values, Armed, Disarmed, or DisarmByPeriod
+    Returns four possible values, Armed, Disarmed, DisarmByPeriod or Unknown
     Note that you CANNOT rely on this to know if it currently armed because
     DisarmedByPeriod only tells you it follows the schedule but does not consider
     what time it is.  Use binary_sensor.DMSS_Is_Currently_Armed instead."""
@@ -171,4 +171,27 @@ class DahuaDMSSArmedStateSensor(DahuaBaseEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return "Hello! " + (self.coordinator.data.get("nvr_current_time") or "Unknown")
+        disable_linkage = self.coordinator.data.get(
+            "table.DisableLinkage.Enable"
+        )
+        disable_by_period = self.coordinator.data.get(
+            "table.DisableLinkageTimeSection.Enable"
+        )
+
+        # If either value wasn't returned by the NVR, we don't know the state.
+        if disable_linkage is None or disable_by_period is None:
+            return "Unknown"
+
+        disable_linkage = disable_linkage.lower() == "true"
+        disable_by_period = disable_by_period.lower() == "true"
+
+        if not disable_linkage and not disable_by_period:
+            return "Armed"
+
+        if disable_linkage and not disable_by_period:
+            return "Disarmed"
+
+        if not disable_linkage and disable_by_period:
+            return "DisarmByPeriod"
+
+        return "Unknown"

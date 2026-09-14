@@ -1147,6 +1147,16 @@ class DahuaClient:
             url = "/cgi-bin/configManager.cgi?action=setConfig&DisableLinkage.Enable={0}".format(value)
             return await self.get(url)
 
+    async def async_get_disarming_linkage_time_section(self) -> dict:
+        """Get the DMSS Disarm By Period configuration
+
+        Example response:
+        table.DisableLinkageTimeSection.Enable=false
+        """
+        url = "/cgi-bin/configManager.cgi?action=getConfig&name=DisableLinkageTimeSection"
+        return await self.get(url)
+
+
     async def async_set_event_notifications(self, channel: int, enabled: bool) -> dict:
         """
         async_set_event_notifications will set the camera's disarming event notifications (Event -> Disarming -> Event Notifications in the UI)
