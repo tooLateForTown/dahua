@@ -68,6 +68,7 @@
                     "events": "Events to subscribe to",
                     "scan_interval": "Seconds between device polls (events are not affected)",
                     "nvr_active_deterrence": "Enable NVR active deterrence controls",
+                    "read_dmss_arming_states": "Read DMSS arming states",
                     "authorized_plates": "Authorized license plates (comma-separated, e.g. ABC1234, XYZ5678)",
                     "authorized_hold_time": "Authorized vehicle hold time (seconds to remain ON)"
                 }

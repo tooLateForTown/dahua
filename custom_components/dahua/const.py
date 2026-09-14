@@ -54,6 +54,8 @@ CONF_USE_RPC2 = "use_rpc2"
 CONF_NVR_ACTIVE_DETERRENCE = "nvr_active_deterrence"
 CONF_AUTHORIZED_PLATES = "authorized_plates"
 CONF_AUTHORIZED_HOLD_TIME = "authorized_hold_time"
+#Read DMSS States / Schedules (to expose Entities)
+CONF_READ_DMSS_ARMING_STATES = "read_dmss_arming_states"
 
 # Events
 EVENT_DAHUA_ANPR_RECOGNIZED = "dahua_anpr_recognized"

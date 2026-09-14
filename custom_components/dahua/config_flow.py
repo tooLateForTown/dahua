@@ -30,6 +30,7 @@ from .const import (
     CONF_NVR_ACTIVE_DETERRENCE,
     CONF_AUTHORIZED_PLATES,
     CONF_AUTHORIZED_HOLD_TIME,
+    CONF_READ_DMSS_ARMING_STATES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_AUTHORIZED_HOLD_TIME,
     MIN_SCAN_INTERVAL,
@@ -346,6 +347,12 @@ class DahuaOptionsFlowHandler(config_entries.OptionsFlow):
             )
         ] = bool
         schema[
+            vol.Required(
+                CONF_READ_DMSS_ARMING_STATES,
+                default=self.options.get(CONF_READ_DMSS_ARMING_STATES, False),
+            )
+        ] = bool
+        schema[
             vol.Optional(
                 CONF_AUTHORIZED_PLATES,
                 default=self.options.get(
@@ -365,6 +372,8 @@ class DahuaOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
             )
         ] = vol.All(vol.Coerce(int), vol.Range(min=1, max=3600))
+
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(schema),
