@@ -207,6 +207,9 @@ def _digest_state(address: str, username: str) -> dict:
 # through Home Assistant, can take up to this long to appear.
 HOST_CACHE_TTL_SECONDS = 5
 CONFIG_CACHE_TTL_SECONDS = 300
+# DMSS Arming Checks
+DMSS_READ_MARKER = "name=DisableLinkage"
+DMSS_CACHE_TTL_SECONDS = 15
 
 # getConfig is a settings read. getStatus and the rest report live state.
 CONFIG_READ_MARKER = "action=getConfig"
@@ -215,6 +218,10 @@ _HOST_CACHE: dict = {}
 
 def _cache_lifetime(url: str) -> int:
     """How long this URL's answer stays good for."""
+
+    if DMSS_READ_MARKER in url:
+        return DMSS_CACHE_TTL_SECONDS
+
     return CONFIG_CACHE_TTL_SECONDS if CONFIG_READ_MARKER in url else HOST_CACHE_TTL_SECONDS
 
 
