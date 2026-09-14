@@ -177,21 +177,28 @@ class DahuaDMSSArmedStateSensor(DahuaBaseEntity, SensorEntity):
         disable_by_period = self.coordinator.data.get(
             "table.DisableLinkageTimeSection.Enable"
         )
-
-        # If either value wasn't returned by the NVR, we don't know the state.
-        if disable_linkage is None or disable_by_period is None:
-            return "Unknown"
-
-        disable_linkage = disable_linkage.lower() == "true"
-        disable_by_period = disable_by_period.lower() == "true"
-
-        if not disable_linkage and not disable_by_period:
-            return "Armed"
-
-        if disable_linkage and not disable_by_period:
-            return "Disarmed"
-
-        if not disable_linkage and disable_by_period:
-            return "DisarmByPeriod"
-
-        return "Unknown"
+        return f"{disable_linkage} / {disable_by_period}"
+        # disable_linkage = self.coordinator.data.get(
+        #     "table.DisableLinkage.Enable"
+        # )
+        # disable_by_period = self.coordinator.data.get(
+        #     "table.DisableLinkageTimeSection.Enable"
+        # )
+        #
+        # # If either value wasn't returned by the NVR, we don't know the state.
+        # if disable_linkage is None or disable_by_period is None:
+        #     return "Unknown"
+        #
+        # disable_linkage = disable_linkage.lower() == "true"
+        # disable_by_period = disable_by_period.lower() == "true"
+        #
+        # if not disable_linkage and not disable_by_period:
+        #     return "Armed"
+        #
+        # if disable_linkage and not disable_by_period:
+        #     return "Disarmed"
+        #
+        # if not disable_linkage and disable_by_period:
+        #     return "DisarmByPeriod"
+        #
+        # return "Unknown"
