@@ -166,4 +166,4 @@ class DahuaHelloWorldSensor(DahuaBaseEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return "Hello_World"
+        return "Hello! " + (self.coordinator.data.get("nvr_current_time") or "Unknown")

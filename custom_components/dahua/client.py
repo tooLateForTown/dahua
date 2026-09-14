@@ -1468,3 +1468,10 @@ class DahuaClient:
             return "Sub"
         else:
             return "Sub_{0}".format(subtype)
+
+    async def async_get_current_nvr_time(self) -> dict:
+        """Get current time from the Dahua device."""
+        # Added by Derek
+        return await self.get(
+            "/cgi-bin/global.cgi?action=getCurrentTime"
+        )

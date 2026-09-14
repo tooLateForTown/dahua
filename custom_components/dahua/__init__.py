@@ -1108,6 +1108,13 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
             # Motion detection state is read by the camera entity as well as
             # the switch, so it survives either one being enabled.
             coros = []
+
+            # Get system time from NVR
+            async def _nvr_current_time():  # Helper function to get nvr_time
+                nvr_time = await self.client.async_get_current_nvr_time()
+                return {"nvr_current_time": nvr_time.get("result")}
+            coros.append(asyncio.ensure_future(_nvr_current_time()))  # Used for Disarm by Period calculations
+
             if self._wanted_by(CAMERA, SWITCH):
                 coros.append(asyncio.ensure_future(self.client.async_get_config_motion_detection()))
             # Only the preset position select reads this, and it is one of the
