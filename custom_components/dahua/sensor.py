@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.dahua import DahuaDataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import (DOMAIN, CONF_READ_DMSS_ARMING_STATES)
 from .entity import DahuaBaseEntity
 
 # Maps the camera's lighting profile id to a readable label.
@@ -27,12 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     """Setup the sensor platform."""
     coordinator: DahuaDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = [
+    sensors: list[SensorEntity] = [
         DahuaFirmwareVersionSensor(coordinator, entry),
         DahuaSerialNumberSensor(coordinator, entry),
         DahuaLicensePlateSensor(coordinator, entry),
-        DahuaHelloWorldSensor(coordinator, entry),
     ]
+    if entry.options.get(CONF_READ_DMSS_ARMING_STATES, False):
+        sensors.append(DahuaDMSSArmedStateSensor(coordinator, entry))
 
     # The profile is only ever read for devices that answered the Lighting
     # probe. Adding the sensor unconditionally would show "Day" forever on a
@@ -157,12 +158,16 @@ class DahuaLicensePlateSensor(DahuaBaseEntity, SensorEntity):
         return False
 
 
-class DahuaHelloWorldSensor(DahuaBaseEntity, SensorEntity):
-    """Test for Derek to prove it works."""
+class DahuaDMSSArmedStateSensor(DahuaBaseEntity, SensorEntity):
+    """Reads the state of the DMSS arming.
+    Returns three possible values, Armed, Disarmed, or DisarmByPeriod
+    Note that you CANNOT rely on this to know if it currently armed because
+    DisarmedByPeriod only tells you it follows the schedule but does not consider
+    what time it is.  Use binary_sensor.DMSS_Is_Currently_Armed instead."""
 
     @property
     def name(self):
-        return "Hello World"
+        return "DMSS Armed State"
 
     @property
     def native_value(self):
