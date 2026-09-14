@@ -9,6 +9,7 @@ from custom_components.dahua import DahuaDataUpdateCoordinator
 from .const import (
     MOTION_SENSOR_DEVICE_CLASS,
     DOMAIN, SAFETY_DEVICE_CLASS, CONNECTIVITY_DEVICE_CLASS, SOUND_DEVICE_CLASS, DOOR_DEVICE_CLASS, VOLUME_HIGH_ICON,
+    CONF_READ_DMSS_ARMING_STATES,
 )
 from .entity import DahuaBaseEntity
 
@@ -58,6 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
         sensors.append(DahuaEventSensor(coordinator, entry, "CallNoAnswered"))
 
     sensors.append(DahuaAuthorizedVehicleBinarySensor(coordinator, entry))
+
+    if entry.options.get(CONF_READ_DMSS_ARMING_STATES, False):
+        sensors.append(
+            DahuaDMSSIsCurrentlyArmedBinarySensor(coordinator, entry)
+        )
 
     if sensors:
         async_add_devices(sensors)
@@ -240,4 +246,38 @@ class DahuaAuthorizedVehicleBinarySensor(DahuaBaseEntity, BinarySensorEntity):
     def should_poll(self) -> bool:
         """Return False as entity pushes state updates."""
         return False
+
+
+class DahuaDMSSIsCurrentlyArmedBinarySensor(DahuaBaseEntity, BinarySensorEntity):
+    """Whether the DMSS system is currently armed."""
+
+    @property
+    def name(self):
+        return "DMSS Is Currently Armed"
+
+    @property
+    def is_on(self):
+        disable_linkage = self.coordinator.data.get(
+            "table.DisableLinkage.Enable"
+        )
+        disable_by_period = self.coordinator.data.get(
+            "table.DisableLinkageTimeSection.Enable"
+        )
+
+        if disable_linkage is None or disable_by_period is None:
+            return None
+
+        disable_linkage = str(disable_linkage).lower() == "true"
+        disable_by_period = str(disable_by_period).lower() == "true"
+
+        # Manual Disarm always wins.
+        if disable_linkage:
+            return False
+
+        # Following a schedule -- we will calculate this next.
+        if disable_by_period:
+            return None
+
+        # Neither disarm mode is active.
+        return True
 
