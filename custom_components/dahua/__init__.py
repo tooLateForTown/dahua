@@ -50,6 +50,7 @@ from .const import (
     CONF_AUTHORIZED_PLATES,
     CONF_AUTHORIZED_HOLD_TIME,
     CONF_READ_DMSS_ARMING_STATES,
+    CONF_IVS_AUDIO_CONTROL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_AUTHORIZED_HOLD_TIME,
     MIN_SCAN_INTERVAL,
@@ -817,6 +818,10 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
         # Enable DMSS Arm State Reading?
         self._read_dmss_arming_states = entry.options.get(CONF_READ_DMSS_ARMING_STATES, False)
 
+        # Keep copy of ivs audio state (Are cameras making noise on tripwires?)
+        self._ivs_audio_control = entry.options.get(CONF_IVS_AUDIO_CONTROL, False)
+
+
         super().__init__(
             hass,
             _LOGGER,
@@ -1113,12 +1118,6 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
             # the switch, so it survives either one being enabled.
             coros = []
 
-            # # Get system time from NVR
-            # async def _nvr_current_time():  # Helper function to get nvr_time
-            #     nvr_time = await self.client.async_get_current_nvr_time()
-            #     return {"nvr_current_time": nvr_time.get("result")}
-            # coros.append(asyncio.ensure_future(_nvr_current_time()))  # Used for Disarm by Period calculations
-
             # DMSS Armed State Options
             if self._read_dmss_arming_states:
                 # Get system time from NVR.
@@ -1137,6 +1136,14 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
                 coros.append(
                     asyncio.ensure_future(
                         self.client.async_get_disarming_linkage_time_section()
+                    )
+                )
+
+            # IVS Audio Control (Derek)
+            if self._ivs_audio_control:
+                coros.append(
+                    asyncio.ensure_future(
+                        self.client.async_get_ivs_audio_enabled_state(self._channel)
                     )
                 )
 

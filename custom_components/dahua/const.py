@@ -54,8 +54,11 @@ CONF_USE_RPC2 = "use_rpc2"
 CONF_NVR_ACTIVE_DETERRENCE = "nvr_active_deterrence"
 CONF_AUTHORIZED_PLATES = "authorized_plates"
 CONF_AUTHORIZED_HOLD_TIME = "authorized_hold_time"
-#Read DMSS States / Schedules (to expose Entities)
+#Read DMSS States / Schedules (to expose Entities) - Added by Derek
 CONF_READ_DMSS_ARMING_STATES = "read_dmss_arming_states"
+# Allow Audio control of Tripwires on Cameras (IVS Settings) - Added by Derek
+CONF_IVS_AUDIO_CONTROL = "ivs_audio_control"
+
 
 # Events
 EVENT_DAHUA_ANPR_RECOGNIZED = "dahua_anpr_recognized"
@@ -63,8 +66,8 @@ EVENT_DAHUA_ANPR_RECOGNIZED = "dahua_anpr_recognized"
 # Defaults
 DEFAULT_NAME = "Dahua"
 DEFAULT_AUTHORIZED_HOLD_TIME = 60
-# How often the coordinator polls each device for its settings. Events do not
-# come from polling - they arrive on the event stream - so this only paces the
+    # How often the coordinator polls each device for its settings. Events do not
+    # come from polling - they arrive on the event stream - so this only paces the
 # configuration read-back.
 DEFAULT_SCAN_INTERVAL = 30
 # Below this the polling costs more than it tells you, especially on an NVR
@@ -77,5 +80,6 @@ STARTUP_MESSAGE = f"""
 This is a custom integration for Dahua cameras!
 If you have any issues with this you need to open an issue here:
 {ISSUE_URL}
+Note that this was modified by tooLateForTown and is a fork of the original rroller version
 -------------------------------------------------------------------
 """

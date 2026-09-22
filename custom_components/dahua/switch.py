@@ -4,7 +4,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
 from custom_components.dahua import DahuaDataUpdateCoordinator
 
-from .const import DOMAIN, DISARMING_ICON, MOTION_DETECTION_ICON, SIREN_ICON, BELL_ICON
+from .const import DOMAIN, DISARMING_ICON, MOTION_DETECTION_ICON, SIREN_ICON, BELL_ICON, CONF_IVS_AUDIO_CONTROL
 from .entity import DahuaBaseEntity
 from .client import SIREN_TYPE
 
@@ -41,6 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     if coordinator.supports_disarming_linkage():
         devices.append(DahuaDisarmingLinkageBinarySwitch(coordinator, entry))
         devices.append(DahuaDisarmingEventNotificationsLinkageBinarySwitch(coordinator, entry))
+
+    # Add Camera IVS Audio Control if enabled  (Derek)
+    if entry.options.get(CONF_IVS_AUDIO_CONTROL, False):
+        devices.append(DahuaIVSAudioSwitch(coordinator, entry))
 
     async_add_devices(devices)
 
@@ -288,3 +292,42 @@ class DahuaSirenBinarySwitch(DahuaBaseEntity, SwitchEntity):
         Value is fetched from api.get_motion_detection_config
         """
         return self._coordinator.is_siren_on()
+
+
+class DahuaIVSAudioSwitch(DahuaBaseEntity, SwitchEntity):
+    """Show the IVS active-deterrence audio state for this camera."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
+        """IVS audio write control is not implemented yet."""
+        pass
+
+    async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
+        """IVS audio write control is not implemented yet."""
+        pass
+
+    @property
+    def name(self):
+        """Return the name of the switch."""
+        return self._coordinator.get_device_name() + " IVS Audio"
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this entity."""
+        return self._coordinator.get_serial_number() + "_ivs_audio_" + str(self._coordinator.get_channel())
+
+    @property
+    def icon(self):
+        """Return the icon of this switch."""
+        return "mdi:volume-high"
+
+    @property
+    def is_on(self):
+        """Return true if IVS audio is enabled for this camera."""
+        return self._coordinator.data.get("ivs_audio_enabled_state")
+
+    @property
+    def available(self):
+        """Return whether the IVS audio state is known."""
+        return super().available and self._coordinator.data.get("ivs_audio_enabled_state") is not None

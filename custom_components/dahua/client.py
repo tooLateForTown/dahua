@@ -601,6 +601,97 @@ class DahuaClient:
         )
         return await self.get(url, True)
 
+    async def async_get_ivs_audio_rules(self) -> dict:
+        """
+        Get the remote IVS rules used for camera active-deterrence audio.
+        Used to read if the audio for cameras is ON or OFF
+        By Derek.
+        """
+        return await self.async_get_config("All.RemoteVideoAnalyseRule")
+
+    async def async_get_ivs_audio_enabled_state(self, channel: int) -> dict:
+        """
+        Return the IVS active-deterrence audio state for one camera channel.
+        By Derek.  Is the audio enabled on every discovered IVS rule for this camera?
+        True  = audio enabled on every discovered IVS rule for this camera
+        False = audio disabled on every discovered IVS rule for this camera
+        None  = mixed state, missing data, or unreadable state
+
+        Rule index 0 is ignored because visible IVS rules on this NVR
+        begin at index 1.
+        """
+        rules = await self.async_get_ivs_audio_rules()  # refresh from the NVR
+
+        if not rules:
+            _LOGGER.error("IVS audio: no RemoteVideoAnalyseRule configuration returned for channel %s", channel)
+            return {"ivs_audio_enabled_state": None}
+
+        prefix = f"table.All.RemoteVideoAnalyseRule[{channel}]["
+        enable_suffix = "].Enable"
+        discovered_rules = []
+
+        # Discover the actual IVS rules belonging to this camera.
+        for key in rules:
+            if not key.startswith(prefix) or not key.endswith(enable_suffix):
+                continue
+
+            try:
+                rule_index = int(key[len(prefix):-len(enable_suffix)])
+            except ValueError as err:
+                _LOGGER.error("IVS audio: unable to parse IVS rule key %s for channel %s: %s", key, channel, err)
+                continue
+
+            # Rule 0 is not a visible IVS rule on this NVR.
+            if rule_index == 0:
+                _LOGGER.debug("IVS audio: ignoring reserved rule [%s][0]", channel)
+                continue
+
+            discovered_rules.append(rule_index)
+
+        if not discovered_rules:
+            _LOGGER.error("IVS audio: no usable IVS rules were discovered for channel %s", channel)
+            return {"ivs_audio_enabled_state": None}
+
+        states = []
+        has_error = False
+
+        # Read VoiceEnable for every discovered rule on this camera.
+        for rule_index in discovered_rules:
+            audio_key = f"table.All.RemoteVideoAnalyseRule[{channel}][{rule_index}].RemoteEventHandler.VoiceEnable"
+
+            if audio_key not in rules:
+                _LOGGER.error("IVS audio: VoiceEnable is missing for rule [%s][%s]", channel, rule_index)
+                has_error = True
+                continue
+
+            value = str(rules[audio_key]).lower()
+
+            if value not in ("true", "false"):
+                _LOGGER.error("IVS audio: unexpected VoiceEnable value for rule [%s][%s]: %r", channel, rule_index, rules[audio_key])
+                has_error = True
+                continue
+
+            enabled = value == "true"
+            states.append(enabled)
+            _LOGGER.debug("IVS audio: rule [%s][%s] VoiceEnable=%s", channel, rule_index, enabled)
+
+        if has_error or len(states) != len(discovered_rules):
+            _LOGGER.error("IVS audio: unable to determine complete audio state for channel %s; successfully read %s of %s rules", channel, len(states), len(discovered_rules))
+            return {"ivs_audio_enabled_state": None}
+
+        enabled_count = sum(states)
+
+        if enabled_count == len(states):
+            _LOGGER.debug("IVS audio: enabled on all %s discovered rules for channel %s", len(states), channel)
+            return {"ivs_audio_enabled_state": True}
+
+        if enabled_count == 0:
+            _LOGGER.debug("IVS audio: disabled on all %s discovered rules for channel %s", len(states), channel)
+            return {"ivs_audio_enabled_state": False}
+
+        _LOGGER.warning("IVS audio: mixed state on channel %s; enabled on %s of %s discovered rules", channel, enabled_count, len(states))
+        return {"ivs_audio_enabled_state": None}
+
     async def async_enabled_smart_motion_detection(self, channel: int, enabled: bool):
         """ Enables or disabled smart motion detection for Dahua devices (doesn't work for Amcrest)
 
