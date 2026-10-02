@@ -700,8 +700,6 @@ class DahuaClient:
                 _LOGGER.warning("IVS audio: mixed state on channel %s; enabled on %s of %s discovered rules", channel, enabled_count, len(rule_states))
                 states[f"ivs_audio_enabled_state_{channel}"] = None
 
-        _LOGGER.debug("IVS audio: final states returned to coordinator: %s", states)
-
         return states
 
     async def async_enabled_smart_motion_detection(self, channel: int, enabled: bool):

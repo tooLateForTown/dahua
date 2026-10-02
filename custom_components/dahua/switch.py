@@ -9,10 +9,6 @@ from .entity import DahuaBaseEntity
 from .client import SIREN_TYPE
 
 
-#temp Logging.  todo remove this
-import logging
-_LOGGER = logging.getLogger(__name__)
-
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_devices):
     """Setup sensor platform."""
     coordinator: DahuaDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -343,16 +339,10 @@ class DahuaIVSAudioSwitch(DahuaBaseEntity, SwitchEntity):
 
         return "mdi:volume-alert"
 
-    # @property
-    # def is_on(self):
-    #     """Return true if IVS audio is enabled for this camera."""
-    #     return self._coordinator.data.get(f"ivs_audio_enabled_state_{self._channel}")
-
     @property
     def is_on(self):
-        state = self._coordinator.data.get(f"ivs_audio_enabled_state_{self._channel}")
-        _LOGGER.debug("IVS audio: Camera %s entity is_on sees %r", self._channel + 1, state)
-        return state
+        """Return true if IVS audio is enabled for this camera."""
+        return self._coordinator.data.get(f"ivs_audio_enabled_state_{self._channel}")
 
     @property
     def available(self):
