@@ -365,7 +365,7 @@ class DahuaOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_IVS_AUDIO_CAMERA_COUNT,
                 default=self.options.get(CONF_IVS_AUDIO_CAMERA_COUNT, 4),
             )
-        ] = vol.All(vol.Coerce(int), vol.Range(min=1, max=32))
+        ] = vol.In([1, 2, 3, 4, 5, 6, 7, 8])
         schema[
             vol.Optional(
                 CONF_AUTHORIZED_PLATES,

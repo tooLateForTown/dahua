@@ -1141,22 +1141,21 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
                     )
                 )
 
-            # # IVS Audio Control (Derek)
+            # # Camera IVS Audio Control (Derek)
             # if self._ivs_audio_control:
-            #     coros.append(
-            #         asyncio.ensure_future(
-            #             self.client.async_get_ivs_audio_enabled_state(self._channel)
+            #     for channel in range(self._ivs_audio_camera_count):
+            #         coros.append(
+            #             asyncio.ensure_future(
+            #                 self.client.async_get_ivs_audio_enabled_state(channel)
+            #             )
             #         )
-            #     )
-
-            # Camera IVS Audio Control (Derek)
+            # Camera IVS Audio Control (Derek) - temporary test
             if self._ivs_audio_control:
-                for channel in range(self._ivs_audio_camera_count):
-                    coros.append(
-                        asyncio.ensure_future(
-                            self.client.async_get_ivs_audio_enabled_state(channel)
-                        )
+                coros.append(
+                    asyncio.ensure_future(
+                        self.client.async_get_ivs_audio_enabled_state(0)
                     )
+                )
 
             if self._wanted_by(CAMERA, SWITCH):
                 coros.append(asyncio.ensure_future(self.client.async_get_config_motion_detection()))
