@@ -634,20 +634,19 @@ class DahuaClient:
             return states
 
         for channel in range(camera_count):
-            prefix = f"table.RemoteVideoAnalyseRule[{channel}]["
-            enable_suffix = "].Enable"
+            rule_pattern = re.compile(
+                rf"^table\.RemoteVideoAnalyseRule\[{channel}\]\[(\d+)\]\.Enable$"
+            )
             discovered_rules = []
 
-            # Discover the actual IVS rules belonging to this camera.
+            # Discover only the top-level IVS rules belonging to this camera.
             for key in rules:
-                if not key.startswith(prefix) or not key.endswith(enable_suffix):
+                match = rule_pattern.match(key)
+
+                if not match:
                     continue
 
-                try:
-                    rule_index = int(key[len(prefix):-len(enable_suffix)])
-                except ValueError as err:
-                    _LOGGER.error("IVS audio: unable to parse IVS rule key %s for channel %s: %s", key, channel, err)
-                    continue
+                rule_index = int(match.group(1))
 
                 # Rule 0 is not a visible IVS rule on this NVR.
                 if rule_index == 0:
