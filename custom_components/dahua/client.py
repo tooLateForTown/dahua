@@ -1558,8 +1558,11 @@ class DahuaClient:
         except (KeyError, TypeError) as exception:
             _LOGGER.warning("TypeError fetching information from %s", url)
             raise exception
+        # except (aiohttp.ClientError, socket.gaierror) as exception:
+        #     _LOGGER.debug("ClientError fetching information from %s", url)
+        #     raise exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
-            _LOGGER.debug("ClientError fetching information from %s", url)
+            _LOGGER.error("ClientError fetching information from %s: %r", url, exception)
             raise exception
         except Exception as exception:  # pylint: disable=broad-except
             _LOGGER.warning("Exception fetching information from %s", url)
