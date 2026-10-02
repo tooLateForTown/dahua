@@ -624,7 +624,7 @@ class DahuaClient:
 
         if not rules:
             _LOGGER.error("IVS audio: no RemoteVideoAnalyseRule configuration returned for channel %s", channel)
-            return {"ivs_audio_enabled_state": None}
+            return {f"ivs_audio_enabled_state_{channel}": None}
 
         prefix = f"table.All.RemoteVideoAnalyseRule[{channel}]["
         enable_suffix = "].Enable"
@@ -650,7 +650,7 @@ class DahuaClient:
 
         if not discovered_rules:
             _LOGGER.error("IVS audio: no usable IVS rules were discovered for channel %s", channel)
-            return {"ivs_audio_enabled_state": None}
+            return {f"ivs_audio_enabled_state_{channel}": None}
 
         states = []
         has_error = False
@@ -677,20 +677,20 @@ class DahuaClient:
 
         if has_error or len(states) != len(discovered_rules):
             _LOGGER.error("IVS audio: unable to determine complete audio state for channel %s; successfully read %s of %s rules", channel, len(states), len(discovered_rules))
-            return {"ivs_audio_enabled_state": None}
+            return {f"ivs_audio_enabled_state_{channel}": None}
 
         enabled_count = sum(states)
 
         if enabled_count == len(states):
             _LOGGER.debug("IVS audio: enabled on all %s discovered rules for channel %s", len(states), channel)
-            return {"ivs_audio_enabled_state": True}
+            return {f"ivs_audio_enabled_state_{channel}": True}
 
         if enabled_count == 0:
             _LOGGER.debug("IVS audio: disabled on all %s discovered rules for channel %s", len(states), channel)
-            return {"ivs_audio_enabled_state": False}
+            return {f"ivs_audio_enabled_state_{channel}": False}
 
         _LOGGER.warning("IVS audio: mixed state on channel %s; enabled on %s of %s discovered rules", channel, enabled_count, len(states))
-        return {"ivs_audio_enabled_state": None}
+        return {f"ivs_audio_enabled_state_{channel}": None}
 
     async def async_enabled_smart_motion_detection(self, channel: int, enabled: bool):
         """ Enables or disabled smart motion detection for Dahua devices (doesn't work for Amcrest)

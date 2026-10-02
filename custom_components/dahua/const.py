@@ -58,7 +58,7 @@ CONF_AUTHORIZED_HOLD_TIME = "authorized_hold_time"
 CONF_READ_DMSS_ARMING_STATES = "read_dmss_arming_states"
 # Allow Audio control of Tripwires on Cameras (IVS Settings) - Added by Derek
 CONF_IVS_AUDIO_CONTROL = "ivs_audio_control"
-
+CONF_IVS_AUDIO_CAMERA_COUNT = "ivs_audio_camera_count"
 
 # Events
 EVENT_DAHUA_ANPR_RECOGNIZED = "dahua_anpr_recognized"

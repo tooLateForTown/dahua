@@ -32,6 +32,7 @@ from .const import (
     CONF_AUTHORIZED_HOLD_TIME,
     CONF_READ_DMSS_ARMING_STATES,
     CONF_IVS_AUDIO_CONTROL,
+    CONF_IVS_AUDIO_CAMERA_COUNT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_AUTHORIZED_HOLD_TIME,
     MIN_SCAN_INTERVAL,
@@ -359,6 +360,12 @@ class DahuaOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.options.get(CONF_IVS_AUDIO_CONTROL, False),
             )
         ] = bool
+        schema[
+            vol.Required(
+                CONF_IVS_AUDIO_CAMERA_COUNT,
+                default=self.options.get(CONF_IVS_AUDIO_CAMERA_COUNT, 4),
+            )
+        ] = vol.All(vol.Coerce(int), vol.Range(min=1, max=32))
         schema[
             vol.Optional(
                 CONF_AUTHORIZED_PLATES,

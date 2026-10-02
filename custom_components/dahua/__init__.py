@@ -51,6 +51,7 @@ from .const import (
     CONF_AUTHORIZED_HOLD_TIME,
     CONF_READ_DMSS_ARMING_STATES,
     CONF_IVS_AUDIO_CONTROL,
+    CONF_IVS_AUDIO_CAMERA_COUNT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_AUTHORIZED_HOLD_TIME,
     MIN_SCAN_INTERVAL,
@@ -820,6 +821,7 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Keep copy of ivs audio state (Are cameras making noise on tripwires?)
         self._ivs_audio_control = entry.options.get(CONF_IVS_AUDIO_CONTROL, False)
+        self._ivs_audio_camera_count = entry.options.get(CONF_IVS_AUDIO_CAMERA_COUNT, 4)
 
 
         super().__init__(
@@ -1139,13 +1141,22 @@ class DahuaDataUpdateCoordinator(DataUpdateCoordinator):
                     )
                 )
 
-            # IVS Audio Control (Derek)
+            # # IVS Audio Control (Derek)
+            # if self._ivs_audio_control:
+            #     coros.append(
+            #         asyncio.ensure_future(
+            #             self.client.async_get_ivs_audio_enabled_state(self._channel)
+            #         )
+            #     )
+
+            # Camera IVS Audio Control (Derek)
             if self._ivs_audio_control:
-                coros.append(
-                    asyncio.ensure_future(
-                        self.client.async_get_ivs_audio_enabled_state(self._channel)
+                for channel in range(self._ivs_audio_camera_count):
+                    coros.append(
+                        asyncio.ensure_future(
+                            self.client.async_get_ivs_audio_enabled_state(channel)
+                        )
                     )
-                )
 
             if self._wanted_by(CAMERA, SWITCH):
                 coros.append(asyncio.ensure_future(self.client.async_get_config_motion_detection()))
